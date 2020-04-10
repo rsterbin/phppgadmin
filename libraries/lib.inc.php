@@ -52,9 +52,14 @@
 
 	// Start session (if not auto-started)
 	if (!ini_get('session.auto_start')) {
+        # If we're on version 7.3 and not auto-starting sessions, set the
+        # SameSite cookie options; older versions fall back to csrf tokens
+        if (version_compare(phpversion(), '7.3', '>=')) {
+            ini_set('session.cookie_samesite', 'Lax');
+        }
 		session_name('PPA_ID');
 		session_start();
-	}
+    }
 
 	// Do basic PHP configuration checks
 	if (ini_get('magic_quotes_gpc')) {
