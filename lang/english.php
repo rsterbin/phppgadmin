@@ -180,6 +180,7 @@
 	$lang['strlibnotfound'] = 'Your PHP installation does not support the %s module. You will need to install, enable, or compile it to use phpPgAdmin.';
 	$lang['strlibnotfound_plural'] = 'Your PHP installation does not support the %s modules. You will need to install, enable, or compile them to use phpPgAdmin.';
 	$lang['strpostgresqlversionnotsupported'] = 'Version of PostgreSQL not supported. Please upgrade to version %s or later.';
+	$lang['strbadcsrftoken'] = 'The CSRF token is invalid. Please try to resubmit the form.';
 	$lang['strbadschema'] = 'Invalid schema specified.';
 	$lang['strbadencoding'] = 'Failed to set client encoding in database.';
 	$lang['strsqlerror'] = 'SQL error:';

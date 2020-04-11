@@ -46,10 +46,17 @@
 
 			echo "<input type=\"submit\" name=\"cluster\" value=\"{$lang['strcluster']}\" />\n"; //TODO
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
+			echo $misc->getCsrfTokenField('cluster');
 			echo "</form>\n";
 		} // END single cluster
+
 		else {
-			//If multi table cluster
+			// Check the csrf token before taking any action
+			if (!$misc->validateCsrfToken('cluster')) {
+				doAdmin($type, $lang['strbadcsrftoken']);
+				return;
+			}
+			// If multi table cluster
 			if ($type == 'table') { // cluster one or more table
 				if (is_array($_REQUEST['table'])) {
 					$msg='';
@@ -84,7 +91,7 @@
 			}
 		}
 	}
-	
+
 	/**
 	 * Show confirmation of reindex and perform reindex
 	 */

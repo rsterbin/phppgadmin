@@ -10,9 +10,13 @@
 		var $href;
 		// Tracking string to include in forms
 		var $form;
+		// Object for managing CSRF tokens
+		var $tokens;
 
 		/* Constructor */
-		function __construct() { 
+		function __construct() {
+			include_once('./classes/TokenStorage.php');
+			$this->tokens = new TokenStorage();
 		}
 
 		/**
@@ -2648,6 +2652,35 @@
 				return false;
 
 			return $fksprops;
+		}
+
+		/**
+		 * Get a hidden token for CSRF prevention
+		 *
+		 * @param string An identifier for the form
+		 * @param integer The timeout, in seconds
+		 * @param boolean Whether this token is single-use
+		 * @return string The markup for the hidden token
+		 */
+		function getCsrfTokenField($identifier = 'general', $timeout = null, $single = null) {
+			global $conf;
+			$f = $conf['csrf_token_name'];
+			$token = $this->tokens->get($identifier, $timeout, $single);
+			$this->tokens->cleanup();
+			return '<input type="hidden" name="' . $f . '" value="' . $token . '" />';
+		}
+
+		/**
+		 * Verify that a valid CSRF token is present in a submitted form
+		 *
+		 * @param string An identifier for the form
+		 * @return boolean Whether a valid token was present
+		 */
+		function validateCsrfToken($identifier = 'general') {
+			global $conf;
+			$f = $conf['csrf_token_name'];
+			$this->tokens->cleanup();
+			return $this->tokens->validate($identifier, $_REQUEST[$f]);
 		}
 	}
 ?>
