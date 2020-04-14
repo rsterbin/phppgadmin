@@ -27,7 +27,6 @@ class TokenStorage {
      * @return string The generated token
      */
     public function get($identifier, $timeout, $single) {
-print '<pre style="color: green;">' . "\n"; var_dump($_SESSION[$this->session_key]); print '</pre>' . "\n";
         $identifier = trim("$identifier");
         if (!is_numeric("$timeout")) {
             $timeout = 1800; // default to 30 minutes
@@ -108,7 +107,6 @@ print '<pre style="color: green;">' . "\n"; var_dump($_SESSION[$this->session_ke
      * @return boolean Whether the token is valid
      */
     public function validate($identifier, $token) {
-print '<pre style="color: blue;">' . "\n"; var_dump($_SESSION[$this->session_key]); print '</pre>' . "\n";
         $found = -1;
         foreach ($_SESSION[$this->session_key] as $i => $t) {
             if ($this->matches($token, $_SESSION[$this->session_key][$i])
@@ -129,7 +127,6 @@ print '<pre style="color: blue;">' . "\n"; var_dump($_SESSION[$this->session_key
      * Cleans out any expired tokens
      */
     public function cleanup() {
-print '<pre style="color: purple;">' . "\n"; var_dump($_SESSION[$this->session_key]); print '</pre>' . "\n";
         foreach ($_SESSION[$this->session_key] as $i => $t) {
             if (!$this->usable($t)) {
                 unset($_SESSION[$this->session_key][$i]);
@@ -137,7 +134,6 @@ print '<pre style="color: purple;">' . "\n"; var_dump($_SESSION[$this->session_k
             }
         }
         $_SESSION[$this->session_key] = array_values($_SESSION[$this->session_key]);
-print '<pre style="color: magenta;">' . "\n"; var_dump($_SESSION[$this->session_key]); print '</pre>' . "\n";
     }
 
     /**
