@@ -139,9 +139,15 @@
 
 			echo "<input type=\"submit\" name=\"reindex\" value=\"{$lang['strreindex']}\" />\n"; //TODO
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
+			echo $misc->getCsrfTokenField('reindex');
 			echo "</form>\n";
 		} // END single reindex
 		else {
+			// Check the csrf token before taking any action
+			if (!$misc->validateCsrfToken('reindex')) {
+				doAdmin($type, $lang['strbadcsrftoken']);
+				return;
+			}
 			//If multi table reindex
 			if (($type == 'table') && is_array($_REQUEST['table'])) {
 				$msg='';
@@ -213,9 +219,15 @@
 
 			echo "<input type=\"submit\" name=\"analyze\" value=\"{$lang['stranalyze']}\" />\n"; //TODO
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
+			echo $misc->getCsrfTokenField('analyze');
 			echo "</form>\n";
 		} // END single analyze
 		else {
+			// Check the csrf token before taking any action
+			if (!$misc->validateCsrfToken('analyze')) {
+				doAdmin($type, $lang['strbadcsrftoken']);
+				return;
+			}
 			//If multi table analyze
 			if (($type == 'table') && is_array($_REQUEST['table'])) {
 				$msg='';
@@ -290,9 +302,15 @@
 			echo "<p><input type=\"checkbox\" id=\"vacuum_freeze\" name=\"vacuum_freeze\" /> <label for=\"vacuum_freeze\">{$lang['strfreeze']}</label></p>\n";
 			echo "<input type=\"submit\" name=\"vacuum\" value=\"{$lang['strvacuum']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
+			echo $misc->getCsrfTokenField('vacuum');
 			echo "</form>\n";
 		} // END single vacuum
 		else {
+			// Check the csrf token before taking any action
+			if (!$misc->validateCsrfToken('vacuum')) {
+				doAdmin($type, $lang['strbadcsrftoken']);
+				return;
+			}
 			//If multi drop
 			if (is_array($_REQUEST['table'])) {
 				$msg='';
