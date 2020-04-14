@@ -16,7 +16,7 @@
 	 * Actually creates the new aggregate in the database
 	 */
 	function doSaveCreate() {
-		global $data, $lang, $_reload_browser;
+		global $data, $lang, $misc, $_reload_browser;
 
 		// Check inputs
 		if (trim($_REQUEST['name']) == '') {
@@ -35,6 +35,12 @@
 			doCreate($lang['straggrneedsstype']);
 			return;
 		}
+
+        // Check the csrf token before taking any action
+        if (!$misc->validateCsrfToken('aggregate')) {
+            doCreate($lang['strbadcsrftoken']);
+            return;
+        }
 
 		$status = $data->createAggregate($_REQUEST['name'], $_REQUEST['basetype'], $_REQUEST['sfunc'], $_REQUEST['stype'], 
 		$_REQUEST['ffunc'], $_REQUEST['initcond'], $_REQUEST['sortop'], $_REQUEST['aggrcomment']);
@@ -100,6 +106,7 @@
 		echo $misc->form;
 		echo "<input type=\"submit\" value=\"{$lang['strcreate']}\" />\n";
 		echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
+        echo $misc->getCsrfTokenField('aggregate');
 		echo "</form>\n";
 	}
 
@@ -107,14 +114,20 @@
 	 * Function to save after altering an aggregate 
 	 */
 	function doSaveAlter() {
-		global $data, $lang;
+		global $data, $lang, $misc;
 
 		// Check inputs
  		if (trim($_REQUEST['aggrname']) == '') {
  			doAlter($lang['straggrneedsname']);
  			return;
  		}
- 
+
+        // Check the csrf token before taking any action
+        if (!$misc->validateCsrfToken('aggregate')) {
+            doCreate($lang['strbadcsrftoken']);
+            return;
+        }
+
 		$status = $data->alterAggregate($_REQUEST['aggrname'], $_REQUEST['aggrtype'], $_REQUEST['aggrowner'], 
 			$_REQUEST['aggrschema'], $_REQUEST['aggrcomment'], $_REQUEST['newaggrname'], $_REQUEST['newaggrowner'], 
 			$_REQUEST['newaggrschema'], $_REQUEST['newaggrcomment']);
@@ -168,19 +181,21 @@
 			echo "<p>{$lang['strnodata']}</p>\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strback']}\" /></p>\n";
 		}	
+        echo $misc->getCsrfTokenField('aggregate');
 		echo "</form>\n";						
 	}
 
 	/**
 	 * Show confirmation of drop and perform actual drop of the aggregate function selected
 	 */
-	function doDrop($confirm) {
+	function doDrop($confirm, $msg = '') {
 		global $data, $misc;
 		global $lang, $_reload_browser;
 
 		if ($confirm) {
 			$misc->printTrail('aggregate');
 			$misc->printTitle($lang['strdrop'], 'pg.aggregate.drop');
+            $misc->printMsg($msg);
 
 			echo "<p>", sprintf($lang['strconfdropaggregate'], htmlspecialchars($_REQUEST['aggrname'])), "</p>\n";
 
@@ -192,9 +207,16 @@
 			echo $misc->form;
 			echo "<input type=\"submit\" name=\"drop\" value=\"{$lang['strdrop']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
+            echo $misc->getCsrfTokenField('aggregate');
 			echo "</form>\n";
 		}
 		else {
+            // Check the csrf token before taking any action
+            if (!$misc->validateCsrfToken('aggregate')) {
+                doDrop(true, $lang['strbadcsrftoken']);
+                return;
+            }
+
 			$status = $data->dropAggregate($_POST['aggrname'], $_POST['aggrtype'], isset($_POST['cascade']));
 			if ($status == 0) {
 				$_reload_browser = true;
