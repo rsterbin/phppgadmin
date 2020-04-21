@@ -182,6 +182,7 @@
 	$lang['strpostgresqlversionnotsupported'] = 'Version of PostgreSQL not supported. Please upgrade to version %s or later.';
 	$lang['strbadcsrftoken'] = 'The CSRF token is invalid. Please try to resubmit the form.';
 	$lang['strbadschema'] = 'Invalid schema specified.';
+	$lang['strbaddatabase'] = 'Invalid database specified.';
 	$lang['strbadencoding'] = 'Failed to set client encoding in database.';
 	$lang['strsqlerror'] = 'SQL error:';
 	$lang['strinstatement'] = 'In statement:';
@@ -198,6 +199,11 @@
 	$lang['strcannotdumponwindows'] = 'Dumping of complex table and schema names on Windows is not supported.';
 	$lang['strinvalidserverparam'] = 'Attempt to connect with invalid server parameter, possibly someone is trying to hack your system.'; 
 	$lang['strnoserversupplied'] = 'No server supplied!';
+	$lang['strnodumps'] = 'Database exports are disabled.';
+	$lang['strbadexporttype'] = 'The export type "%s" is not supported.';
+	$lang['strbadexportsubject'] = 'The export subject "%s" is not supported.';
+	$lang['strbadexportformat'] = 'The export format "%s" is not supported.';
+	$lang['strbadexportname'] = 'The filename "%s" cannot be used for an export.';
 	$lang['strbadpgdumppath'] = 'Export error: Failed to execute pg_dump (given path in your conf/config.inc.php : %s). Please, fix this path in your configuration and relog.';
 	$lang['strbadpgdumpallpath'] = 'Export error: Failed to execute pg_dumpall (given path in your conf/config.inc.php : %s). Please, fix this path in your configuration and relog.';
 	$lang['strconnectionfail'] = 'Can not connect to server.';
