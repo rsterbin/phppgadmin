@@ -42,3 +42,7 @@ If you see a login page, phppgadmin is protected. If you see a query error page,
 
 If you're not able to see the request in your console, your browser may have hidden it. In that case, you'll need to actually make the query work. Open `poc1.html` and set functional credentials in the `dblink_connect` call.
 
+---
+
+NB: The file "files-with-forms.txt" is a list of all files in the source that have a form tag somewhere in them and thus need to be checked in case they need a CSRF token added.
+
