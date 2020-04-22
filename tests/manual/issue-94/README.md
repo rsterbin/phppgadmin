@@ -34,11 +34,9 @@ http://localhost2:8001
 
 5. Log in to phppgadmin
 
-## Out of band technique
+6. Run a test
 
-Choose "proof of concept #1" from the list of tests. Open your console, and click "Submit Request" -- you should see a CORS error, but the request should also appear. Open it to see the response.
+Choose a test from the list. Open your console, and click "Submit Request" -- you should see a CORS error, but the request should also appear in the network tab. Open it to see the response.
 
-If you see a login page, phppgadmin is protected. If you see a query error page, phppgadmin is unprotected.
-
-If you're not able to see the request in your console, your browser may have hidden it. In that case, you'll need to actually make the query work. Open `poc1.html` and set functional credentials in the `dblink_connect` call.
+If you see a login page, phppgadmin is protected. If not, phppgadmin is vulnerable.
 
