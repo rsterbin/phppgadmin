@@ -55,7 +55,7 @@
 		# If we're on version 7.3 and not auto-starting sessions, set the
 		# SameSite cookie options; older versions fall back to csrf tokens
 		if (version_compare(phpversion(), '7.3', '>=')) {
-			ini_set('session.cookie_samesite', 'Lax');
+			ini_set('session.cookie_samesite', 'Strict');
 		}
 		session_name('PPA_ID');
 		session_start();
