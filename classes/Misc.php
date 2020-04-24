@@ -2096,6 +2096,9 @@
 					echo "</td>\n";
 					echo "</tr>\n";
 					echo "</table>\n";
+                    if ($has_ma && isset($ma['csrf_id'])) {
+                        echo $this->getCsrfTokenField($ma['csrf_id']);
+                    }
 					echo '</form>';
 				};
 

@@ -3,10 +3,10 @@ DONE: (reha)
 admin.php
 aggregates.php
 all_db.php
+classes/Misc.php
 
 TODO:
 -----
-classes/Misc.php
 colproperties.php
 constraints.php
 database.php
@@ -36,4 +36,14 @@ types.php
 users.php
 viewproperties.php
 views.php
+
+TODO SPECIAL:
+-------------
+* Files using Misc->printTable() that might need tokens for multiactions:
+    fulltext.php
+    functions.php
+    schemas.php
+    sequences.php
+    tables.php
+    views.php
 
