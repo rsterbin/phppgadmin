@@ -4,10 +4,10 @@ admin.php
 aggregates.php
 all_db.php
 classes/Misc.php
+colproperties.php
 
 TODO:
 -----
-colproperties.php
 constraints.php
 database.php
 dataexport.php
