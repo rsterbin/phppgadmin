@@ -2681,8 +2681,14 @@
 		 */
 		function validateCsrfToken($identifier = 'general') {
 			global $conf;
+            if (!isset($conf['csrf_token_name'])) {
+                return false;
+            }
 			$f = $conf['csrf_token_name'];
 			$this->tokens->cleanup();
+            if (!isset($_REQUEST[$f])) {
+                return false;
+            }
 			return $this->tokens->validate($identifier, $_REQUEST[$f]);
 		}
 	}
