@@ -137,10 +137,17 @@
 				}
 				echo "<input type=\"submit\" value=\"{$lang['stralter']}\" />\n";
 				echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
+				echo $misc->getCsrfTokenField('colproperties');
 				echo "</form>\n";
 				echo "<script type=\"text/javascript\">predefined_lengths = new Array(". implode(",",$escaped_predef_types) .");checkLengths(document.getElementById('type').value,'');</script>\n";		
 				break;
 			case 2:
+				// Check the csrf token before taking any action
+				if (!$misc->validateCsrfToken('colproperties')) {
+					$_REQUEST['stage'] = 1;
+					doAlter($lang['strbadcsrftoken']);
+					return;
+				}
 				// Check inputs
 				if (trim($_REQUEST['field']) == '') {
 					$_REQUEST['stage'] = 1;
