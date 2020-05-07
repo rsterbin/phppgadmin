@@ -497,15 +497,17 @@
 		// Check the csrf token before taking any action
 		if (!$misc->hasValidPassthroughCsrfToken() && !$misc->validateCsrfToken('sql')) {
 			echo '<p>' . $lang['strbadcsrftoken'] . '</p>';
-			return;
+			$rs = null;
 		}
-
-		// Retrieve page from query.  $max_pages is returned by reference.
-		$rs = $data->browseQuery($type, 
-			isset($object) ? $object : null, 
-			isset($_SESSION['sqlquery']) ? $_SESSION['sqlquery'] : null,
-			$_REQUEST['sortkey'], $_REQUEST['sortdir'], $_REQUEST['page'],
-			$conf['max_rows'], $max_pages);
+		// Assuming tokens check out...
+		else {
+			// Retrieve page from query.  $max_pages is returned by reference.
+			$rs = $data->browseQuery($type, 
+				isset($object) ? $object : null, 
+				isset($_SESSION['sqlquery']) ? $_SESSION['sqlquery'] : null,
+				$_REQUEST['sortkey'], $_REQUEST['sortdir'], $_REQUEST['page'],
+				$conf['max_rows'], $max_pages);
+		}
 
 		$fkey_information =& getFKInfo();
 
