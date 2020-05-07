@@ -40,6 +40,18 @@
 		if (!isset($_REQUEST['term'])) $_REQUEST['term'] = '';
 		if (!isset($_REQUEST['filter'])) $_REQUEST['filter'] = '';
 
+		// If this is a form post, check the csrf token before running a search
+		$token_ok = true;
+		if ($_REQUEST['term'] != '' && $_SERVER['REQUEST_METHOD'] == 'POST') {
+			if (!$misc->validateCsrfToken('database')) {
+				if ($msg != '')  {
+					$msg .= "<br />\n" . $lang['strbadcsrftoken'];
+				} else {
+					$msg = $lang['strbadcsrftoken'];
+				}
+			}
+		}
+
 		$misc->printTrail('database');
 		$misc->printTabs('database','find');
 		$misc->printMsg($msg);
@@ -73,6 +85,7 @@
 		echo "<input type=\"submit\" value=\"{$lang['strfind']}\" />\n";
 		echo $misc->form;
 		echo "<input type=\"hidden\" name=\"action\" value=\"find\" /></p>\n";
+		echo $misc->getCsrfTokenField('database');
 		echo "</form>\n";
 		
 		// Default focus
@@ -80,7 +93,7 @@
 
 		// If a search term has been specified, then perform the search
 		// and display the results, grouped by object type
-		if ($_REQUEST['term'] != '') {
+		if ($_REQUEST['term'] != '' && $token_ok) {
 			$rs = $data->findObject($_REQUEST['term'], $_REQUEST['filter']);
 			if ($rs->recordCount() > 0) {
 				$curr = '';
@@ -299,9 +312,55 @@
 	}
 
 	/**
+	 * Attempts to run the export, and returns an error message if it broke
+	 */
+	function doExport() {
+		global $data, $misc;
+		global $lang;
+
+		// Check the csrf token before taking any action
+		if (!$misc->validateCsrfToken('database')) {
+			return $lang['strbadcsrftoken'];
+		}
+
+		// Include the passthrough exporter
+		include_once('./classes/Export/Passthrough.php');
+
+		// Find all the options we'll be passing in
+		$options = array(
+			'server_id' => isset($_REQUEST['server']) ? $_REQUEST['server'] : null,
+			'cluster_wide' => (isset($_REQUEST['subject']) && $_REQUEST['subject'] == 'server'),
+			'database' => isset($_REQUEST['database']) ? $_REQUEST['database'] : null,
+			'schema' => isset($_REQUEST['schema']) ? $_REQUEST['schema'] : null,
+			'subject' => isset($_REQUEST['subject']) ? $_REQUEST['subject'] : null,
+			'object' => isset($_REQUEST['subject']) ? $_REQUEST[$_REQUEST['subject']] : null,
+			'format' => isset($_REQUEST['d_format']) ? $_REQUEST['d_format'] :
+				isset($_REQUEST['sd_format']) ? $_REQUEST['sd_format'] : null,
+			'identifiers' => isset($_REQUEST['d_oids']) || isset($_REQUEST['sd_oids']),
+			'drop' => isset($_REQUEST['s_clean']) || isset($_REQUEST['sd_clean']),
+			'output' => isset($_REQUEST['output']) ? $_REQUEST['output'] : null,
+			'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+			'ssl' => isset($_SERVER['HTTPS']),
+			'containing' => isset($_REQUEST['what']) ? $_REQUEST['what'] : null,
+		);
+
+		// Create the exporter
+		$exporter = new Export_Passthrough($options);
+
+		// If we can't proceed, return the error message
+		if (!$exporter->canProceed()) {
+			return $exporter->getErrorMessage();
+		}
+
+		// Run the passthrough export and exit
+		$exporter->run();
+		return false;
+	}
+
+	/**
 	 * Displays options for database download
 	 */
-	function doExport($msg = '') {
+	function doExportConfirm($msg = '') {
 		global $data, $misc;
 		global $lang;
 
@@ -309,7 +368,7 @@
 		$misc->printTabs('database','export');
 		$misc->printMsg($msg);
 
-		echo "<form action=\"dbexport.php\" method=\"post\">\n";
+		echo "<form action=\"database.php\" method=\"post\">\n";
 		echo "<table>\n";
 		echo "<tr><th class=\"data\">{$lang['strformat']}</th><th class=\"data\" colspan=\"2\">{$lang['stroptions']}</th></tr>\n";
 		// Data only
@@ -350,8 +409,10 @@
 		echo "</p>\n";
 		echo "<p><input type=\"hidden\" name=\"action\" value=\"export\" />\n";
 		echo "<input type=\"hidden\" name=\"subject\" value=\"database\" />\n";
+		echo "<input type=\"hidden\" name=\"export\" value=\"database\" />\n";
 		echo $misc->form;
 		echo "<input type=\"submit\" value=\"{$lang['strexport']}\" /></p>\n";
+		echo $misc->getCsrfTokenField('database');
 		echo "</form>\n";
 	}
 	
@@ -606,6 +667,7 @@
 		echo "<p><input type=\"submit\" name=\"execute\" accesskey=\"r\" value=\"{$lang['strexecute']}\" />\n";
 		echo $misc->form;
 		echo "<input type=\"reset\" accesskey=\"q\" value=\"{$lang['strreset']}\" /></p>\n";
+		echo $misc->getCsrfTokenField('sql');
 		echo "</form>\n";
 
 		// Default focus
@@ -638,6 +700,14 @@
 		$misc->printTree($items, $attrs, 'database');
 
 		exit;
+	}
+
+	$export_error = '';
+	if ($action == 'export' && isset($_REQUEST['export'])) {
+		$export_error = doExport();
+		if (!$export_error) {
+			exit;
+		}
 	}
 
 	require('./admin.php');
@@ -688,7 +758,7 @@
 			doLocks();
 			break;
 		case 'export':
-			doExport();
+			doExportConfirm($export_error);
 			break;
 		case 'signal':
 			doSignal();

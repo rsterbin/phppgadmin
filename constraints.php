@@ -55,7 +55,8 @@
 
 					if ($attrs->recordCount() > 0) {
 						while (!$attrs->EOF) {
-							$selColumns->add(new XHTML_Option($attrs->fields['attname']));
+							$opt = new XHTML_Option($attrs->fields['attname']);
+							$selColumns->add($opt);
 							$attrs->moveNext();
 						}
 					}
@@ -121,6 +122,7 @@
 					echo "<input type=\"hidden\" name=\"target\" value=\"", htmlspecialchars(serialize($_REQUEST['target'])), "\" />\n";
 					echo "<input type=\"hidden\" name=\"SourceColumnList\" value=\"", htmlspecialchars($_REQUEST['SourceColumnList']), "\" />\n";
 					echo "<input type=\"hidden\" name=\"stage\" value=\"3\" />\n";
+					echo $misc->getCsrfTokenField('constraints');
 					echo "<input type=\"submit\" value=\"{$lang['stradd']}\" />\n";
 					echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
 					echo "</form>\n";
@@ -130,11 +132,20 @@
 				// Unserialize target
 				$_POST['target'] = unserialize($_POST['target']);
 
-				// Check that they've given at least one column
+				// Unserialize the source column list, if necessary
 				if (isset($_POST['SourceColumnList'])) $temp = unserialize($_POST['SourceColumnList']);
-				if (!isset($_POST['IndexColumnList']) || !is_array($_POST['IndexColumnList'])
+
+				// Check the csrf token before taking any action
+				if (!$misc->validateCsrfToken('constraints')) {
+					addForeignKey(2, $lang['strbadcsrftoken']);
+				}
+				// Check that they've given at least one column
+				elseif (!isset($_POST['IndexColumnList']) || !is_array($_POST['IndexColumnList'])
 						|| sizeof($_POST['IndexColumnList']) == 0 || !isset($temp)
-						|| !is_array($temp) || sizeof($temp) == 0) addForeignKey(2, $lang['strfkneedscols']);
+						|| !is_array($temp) || sizeof($temp) == 0) {
+						addForeignKey(2, $lang['strfkneedscols']);
+				}
+				// Otherwise, add the key
 				else {
 					$status = $data->addForeignKey($_POST['table'], $_POST['target']['schemaname'], $_POST['target']['tablename'],
 						unserialize($_POST['SourceColumnList']), $_POST['IndexColumnList'], $_POST['upd_action'], $_POST['del_action'],
@@ -158,7 +169,8 @@
 
 				if ($attrs->recordCount() > 0) {
 					while (!$attrs->EOF) {
-						$selColumns->add(new XHTML_Option($attrs->fields['attname']));
+						$opt = new XHTML_Option($attrs->fields['attname']);
+						$selColumns->add($opt);
 						$attrs->moveNext();
 					}
 				}
@@ -251,7 +263,8 @@
 
 			if ($attrs->recordCount() > 0) {
 				while (!$attrs->EOF) {
-					$selColumns->add(new XHTML_Option($attrs->fields['attname']));
+					$opt = new XHTML_Option($attrs->fields['attname']);
+					$selColumns->add($opt);
 					$attrs->moveNext();
 				}
 			}
@@ -302,6 +315,7 @@
 			echo $misc->form;
 			echo "<input type=\"hidden\" name=\"table\" value=\"", htmlspecialchars($_REQUEST['table']), "\" />\n";
 			echo "<input type=\"hidden\" name=\"type\" value=\"", htmlspecialchars($type), "\" />\n";
+			echo $misc->getCsrfTokenField('constraints');
 			echo "<input type=\"submit\" value=\"{$lang['stradd']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
 			echo "</form>\n";
@@ -311,9 +325,15 @@
 			if (!isset($_POST['tablespace'])) $_POST['tablespace'] = '';
 
 			if ($_POST['type'] == 'primary') {
+				// Check the csrf token before taking any action
+				if (!$misc->validateCsrfToken('constraints')) {
+					addPrimaryOrUniqueKey($_POST['type'], true, $lang['strbadcsrftoken']);
+				}
 				// Check that they've given at least one column
-				if (!isset($_POST['IndexColumnList']) || !is_array($_POST['IndexColumnList'])
-						|| sizeof($_POST['IndexColumnList']) == 0) addPrimaryOrUniqueKey($_POST['type'], true, $lang['strpkneedscols']);
+				elseif (!isset($_POST['IndexColumnList']) || !is_array($_POST['IndexColumnList'])
+						|| sizeof($_POST['IndexColumnList']) == 0) {
+						addPrimaryOrUniqueKey($_POST['type'], true, $lang['strpkneedscols']);
+				}
 				else {
 					$status = $data->addPrimaryKey($_POST['table'], $_POST['IndexColumnList'], $_POST['name'], $_POST['tablespace']);
 					if ($status == 0)
@@ -323,9 +343,15 @@
 				}
 			}
 			elseif ($_POST['type'] == 'unique') {
+				// Check the csrf token before taking any action
+				if (!$misc->validateCsrfToken('constraints')) {
+					addPrimaryOrUniqueKey($_POST['type'], true, $lang['strbadcsrftoken']);
+				}
 				// Check that they've given at least one column
-				if (!isset($_POST['IndexColumnList']) || !is_array($_POST['IndexColumnList'])
-						|| sizeof($_POST['IndexColumnList']) == 0) addPrimaryOrUniqueKey($_POST['type'], true, $lang['struniqneedscols']);
+				elseif (!isset($_POST['IndexColumnList']) || !is_array($_POST['IndexColumnList'])
+					|| sizeof($_POST['IndexColumnList']) == 0) {
+					addPrimaryOrUniqueKey($_POST['type'], true, $lang['struniqneedscols']);
+				}
 				else {
 					$status = $data->addUniqueKey($_POST['table'], $_POST['IndexColumnList'], $_POST['name'], $_POST['tablespace']);
 					if ($status == 0)
@@ -368,14 +394,20 @@
 			echo "<input type=\"hidden\" name=\"action\" value=\"save_add_check\" />\n";
 			echo "<input type=\"hidden\" name=\"table\" value=\"", htmlspecialchars($_REQUEST['table']), "\" />\n";
 			echo $misc->form;
+			echo $misc->getCsrfTokenField('constraints');
 			echo "<p><input type=\"submit\" name=\"ok\" value=\"{$lang['stradd']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
 			echo "</form>\n";
 
 		}
 		else {
-			if (trim($_POST['definition']) == '')
+			// Check the csrf token before taking any action
+			if (!$misc->validateCsrfToken('constraints')) {
+				addCheck(true, $lang['strbadcsrftoken']);
+			}
+			elseif (trim($_POST['definition']) == '') {
 				addCheck(true, $lang['strcheckneedsdefinition']);
+			}
 			else {
 				$status = $data->addCheckConstraint($_POST['table'],
 					$_POST['definition'], $_POST['name']);
@@ -390,13 +422,14 @@
 	/**
 	 * Show confirmation of drop and perform actual drop
 	 */
-	function doDrop($confirm) {
+	function doDrop($confirm, $msg = '') {
 		global $data, $misc;
 		global $lang;
 
 		if ($confirm) {
 			$misc->printTrail('constraint');
 			$misc->printTitle($lang['strdrop'],'pg.constraint.drop');
+			$misc->printMsg($msg);
 
 			echo "<p>", sprintf($lang['strconfdropconstraint'], $misc->printVal($_REQUEST['constraint']),
 				$misc->printVal($_REQUEST['table'])), "</p>\n";
@@ -408,16 +441,23 @@
 			echo "<input type=\"hidden\" name=\"type\" value=\"", htmlspecialchars($_REQUEST['type']), "\" />\n";
 			echo $misc->form;
 			echo "<p><input type=\"checkbox\" id=\"cascade\" name=\"cascade\" /> <label for=\"cascade\">{$lang['strcascade']}</label></p>\n";
+			echo $misc->getCsrfTokenField('constraints');
 			echo "<input type=\"submit\" name=\"drop\" value=\"{$lang['strdrop']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
 			echo "</form>\n";
 		}
 		else {
-			$status = $data->dropConstraint($_POST['constraint'], $_POST['table'], $_POST['type'], isset($_POST['cascade']));
-			if ($status == 0)
-				doDefault($lang['strconstraintdropped']);
-			else
-				doDefault($lang['strconstraintdroppedbad']);
+			// Check the csrf token before taking any action
+			if (!$misc->validateCsrfToken('constraints')) {
+				doDrop(true, $lang['strbadcsrftoken']);
+			}
+			else {
+				$status = $data->dropConstraint($_POST['constraint'], $_POST['table'], $_POST['type'], isset($_POST['cascade']));
+				if ($status == 0)
+					doDefault($lang['strconstraintdropped']);
+				else
+					doDefault($lang['strconstraintdroppedbad']);
+			}
 		}
 	}
 

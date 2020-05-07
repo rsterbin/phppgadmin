@@ -37,7 +37,7 @@
 					for ($k = 0; $k < $num_fields; $k++) {
 						echo "<th class=\"data\">", $misc->printVal(pg_fieldname($rs, $k)), "</th>";
 					}
-		
+
 					$i = 0;
 					$row = pg_fetch_row($rs);
 					while ($row !== false) {
@@ -45,7 +45,7 @@
 						echo "<tr class=\"data{$id}\">\n";
 						foreach ($row as $k => $v) {
 							echo "<td style=\"white-space:nowrap;\">", $misc->printVal($v, pg_fieldtype($rs, $k), array('null' => true)), "</td>";
-						}							
+						}
 						echo "</tr>\n";
 						$row = pg_fetch_row($rs);
 						$i++;
@@ -85,7 +85,7 @@
 	else {
 		echo "could not find the query!!";
 	}
-	
+
 	// Pagination maybe set by a get link that has it as FALSE,
 	// if that's the case, unset the variable.
 
@@ -94,6 +94,12 @@
 		unset($_POST['paginate']);
 		unset($_GET['paginate']);
 	}
+
+	// Check the csrf token before taking any action
+	// We might need to include the display script, so allow it to use this
+	// token validation instead of checking twice
+	$token_ok = $misc->validateCsrfToken('sql', 1);
+
 	// Check to see if pagination has been specified. In that case, send to display
 	// script for pagination
 	/* if a file is given or the request is an explain, do not paginate */
@@ -102,7 +108,7 @@
 		include('./display.php');
 		exit;
 	}
-	
+
 	$subject = isset($_REQUEST['subject'])? $_REQUEST['subject'] : '';
 	$misc->printHeader($lang['strqueryresults']);
 	$misc->printBody();
@@ -117,68 +123,77 @@
 		}
 	}
 
-	// May as well try to time the query
-	if (function_exists('microtime')) {
-		list($usec, $sec) = explode(' ', microtime());
-		$start_time = ((float)$usec + (float)$sec);
+	// If the token was bad, throw an error instead of running the query
+	if (!$token_ok) {
+		echo '<p>' . $lang['strbadcsrftoken'] . '</p>';
+		$duration = null;
 	}
-	else $start_time = null;
-	// Execute the query.  If it's a script upload, special handling is necessary
-	if (isset($_FILES['script']) && $_FILES['script']['size'] > 0)
-		$data->executeScript('script', 'sqlCallback');
+	// Move on if all is well
 	else {
-		// Set fetch mode to NUM so that duplicate field names are properly returned
-		$data->conn->setFetchMode(ADODB_FETCH_NUM);
-		$rs = $data->conn->Execute($_SESSION['sqlquery']);
 
-		// $rs will only be an object if there is no error
-		if (is_object($rs)) {
-			// Request was run, saving it in history
-			if(!isset($_REQUEST['nohistory']))
-				$misc->saveScriptHistory($_SESSION['sqlquery']);
+		// May as well try to time the query
+		if (function_exists('microtime')) {
+			list($usec, $sec) = explode(' ', microtime());
+			$start_time = ((float)$usec + (float)$sec);
+		}
+		else $start_time = null;
+		// Execute the query.  If it's a script upload, special handling is necessary
+		if (isset($_FILES['script']) && $_FILES['script']['size'] > 0)
+			$data->executeScript('script', 'sqlCallback');
+		else {
+			// Set fetch mode to NUM so that duplicate field names are properly returned
+			$data->conn->setFetchMode(ADODB_FETCH_NUM);
+			$rs = $data->conn->Execute($_SESSION['sqlquery']);
 
-			// Now, depending on what happened do various things
-	
-			// First, if rows returned, then display the results
-			if ($rs->recordCount() > 0) {
-				echo "<table>\n<tr>";
-				foreach ($rs->fields as $k => $v) {
-					$finfo = $rs->fetchField($k);
-					echo "<th class=\"data\">", $misc->printVal($finfo->name), "</th>";
-				}
-                                echo "</tr>\n";	
-				$i = 0;		
-				while (!$rs->EOF) {
-					$id = (($i % 2) == 0 ? '1' : '2');
-					echo "<tr class=\"data{$id}\">\n";
+			// $rs will only be an object if there is no error
+			if (is_object($rs)) {
+				// Request was run, saving it in history
+				if(!isset($_REQUEST['nohistory']))
+					$misc->saveScriptHistory($_SESSION['sqlquery']);
+
+				// Now, depending on what happened do various things
+
+				// First, if rows returned, then display the results
+				if ($rs->recordCount() > 0) {
+					echo "<table>\n<tr>";
 					foreach ($rs->fields as $k => $v) {
 						$finfo = $rs->fetchField($k);
-						echo "<td style=\"white-space:nowrap;\">", $misc->printVal($v, $finfo->type, array('null' => true)), "</td>";
-					}							
+						echo "<th class=\"data\">", $misc->printVal($finfo->name), "</th>";
+					}
 					echo "</tr>\n";
-					$rs->moveNext();
-					$i++;
+					$i = 0;
+					while (!$rs->EOF) {
+						$id = (($i % 2) == 0 ? '1' : '2');
+						echo "<tr class=\"data{$id}\">\n";
+						foreach ($rs->fields as $k => $v) {
+							$finfo = $rs->fetchField($k);
+							echo "<td style=\"white-space:nowrap;\">", $misc->printVal($v, $finfo->type, array('null' => true)), "</td>";
+						}
+						echo "</tr>\n";
+						$rs->moveNext();
+						$i++;
+					}
+					echo "</table>\n";
+					echo "<p>", $rs->recordCount(), " {$lang['strrows']}</p>\n";
 				}
-				echo "</table>\n";
-				echo "<p>", $rs->recordCount(), " {$lang['strrows']}</p>\n";
+				// Otherwise if any rows have been affected
+				elseif ($data->conn->Affected_Rows() > 0) {
+					echo "<p>", $data->conn->Affected_Rows(), " {$lang['strrowsaff']}</p>\n";
+				}
+				// Otherwise nodata to print
+				else echo '<p>', $lang['strnodata'], "</p>\n";
 			}
-			// Otherwise if any rows have been affected
-			elseif ($data->conn->Affected_Rows() > 0) {
-				echo "<p>", $data->conn->Affected_Rows(), " {$lang['strrowsaff']}</p>\n";
-			}
-			// Otherwise nodata to print
-			else echo '<p>', $lang['strnodata'], "</p>\n";
 		}
-	}
 
-	// May as well try to time the query
-	if ($start_time !== null) {
-		list($usec, $sec) = explode(' ', microtime());
-		$end_time = ((float)$usec + (float)$sec);	
-		// Get duration in milliseconds, round to 3dp's	
-		$duration = number_format(($end_time - $start_time) * 1000, 3);
+		// May as well try to time the query
+		if ($start_time !== null) {
+			list($usec, $sec) = explode(' ', microtime());
+			$end_time = ((float)$usec + (float)$sec);
+			// Get duration in milliseconds, round to 3dp's
+			$duration = number_format(($end_time - $start_time) * 1000, 3);
+		}
+		else $duration = null;
 	}
-	else $duration = null;
 
 	// Reload the browser as we may have made schema changes
 	$_reload_browser = true;
@@ -187,9 +202,12 @@
 	if ($duration !== null) {
 		echo "<p>", sprintf($lang['strruntime'], $duration), "</p>\n";
 	}
-	
-	echo "<p>{$lang['strsqlexecuted']}</p>\n";
-			
+
+	// Don't say the query was executed if it wasn't
+	if ($token_ok) {
+		echo "<p>{$lang['strsqlexecuted']}</p>\n";
+	}
+
 	$navlinks = array();
 	$fields = array(
 		'server' => $_REQUEST['server'],
@@ -198,7 +216,7 @@
 
 	if(isset($_REQUEST['schema']))
 		$fields['schema'] = $_REQUEST['schema'];
-	
+
 	// Return
 	if (isset($_REQUEST['return'])) {
 		$urlvars = $misc->getSubjectParams($_REQUEST['return']);
@@ -213,7 +231,7 @@
 		);
 	}
 
-	// Edit		
+	// Edit
 	$navlinks['alter'] = array (
 		'attr'=> array (
 			'href' => array (
@@ -258,6 +276,6 @@
 	}
 
 	$misc->printNavLinks($navlinks, 'sql-form', get_defined_vars());
-	
+
 	$misc->printFooter();
 ?>

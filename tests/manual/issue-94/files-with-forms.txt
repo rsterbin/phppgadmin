@@ -5,13 +5,17 @@ aggregates.php
 all_db.php
 classes/Misc.php
 colproperties.php
+constraints.php
+database.php
+
+IN PROGRESS:
+------------
+sql.php
+display.php
 
 TODO:
 -----
-constraints.php
-database.php
 dataexport.php
-display.php
 domains.php
 fulltext.php
 functions.php

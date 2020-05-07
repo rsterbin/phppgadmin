@@ -494,6 +494,12 @@
 			}
 		}
 
+		// Check the csrf token before taking any action
+		if (!$misc->hasValidPassthroughCsrfToken() && !$misc->validateCsrfToken('sql')) {
+			echo '<p>' . $lang['strbadcsrftoken'] . '</p>';
+			return;
+		}
+
 		// Retrieve page from query.  $max_pages is returned by reference.
 		$rs = $data->browseQuery($type, 
 			isset($object) ? $object : null, 

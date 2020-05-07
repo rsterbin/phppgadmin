@@ -12,6 +12,9 @@
 		var $form;
 		// Object for managing CSRF tokens
 		var $tokens;
+		// If we need to check tokens more than once on the same page load,
+		// this is the number to allow (private to prevent any outside access)
+		private $passthrough_csrf_token = 0;
 
 		/* Constructor */
 		function __construct() {
@@ -2096,9 +2099,9 @@
 					echo "</td>\n";
 					echo "</tr>\n";
 					echo "</table>\n";
-                    if ($has_ma && isset($ma['csrf_id'])) {
-                        echo $this->getCsrfTokenField($ma['csrf_id']);
-                    }
+					if ($has_ma && isset($ma['csrf_id'])) {
+						echo $this->getCsrfTokenField($ma['csrf_id']);
+					}
 					echo '</form>';
 				};
 
@@ -2677,19 +2680,44 @@
 		 * Verify that a valid CSRF token is present in a submitted form
 		 *
 		 * @param string An identifier for the form
+		 * @param integer If we need to pass through the token validation somewhere
+		 *                else on this page load, this is the number of further
+		 *                checks that should be considered valid
 		 * @return boolean Whether a valid token was present
 		 */
-		function validateCsrfToken($identifier = 'general') {
+		function validateCsrfToken($identifier = 'general', $set_passthrough = 0) {
 			global $conf;
-            if (!isset($conf['csrf_token_name'])) {
-                return false;
-            }
+			if (!isset($conf['csrf_token_name'])) {
+				return false;
+			}
 			$f = $conf['csrf_token_name'];
 			$this->tokens->cleanup();
-            if (!isset($_REQUEST[$f])) {
-                return false;
-            }
-			return $this->tokens->validate($identifier, $_REQUEST[$f]);
+			if (!isset($_REQUEST[$f])) {
+				return false;
+			}
+			$ok = $this->tokens->validate($identifier, $_REQUEST[$f]);
+			if ($ok && intval($set_passthrough) > 0) {
+				$this->passthrough_csrf_token = intval($set_passthrough);
+			}
+			return $ok;
 		}
+
+		/**
+		 * Returns whether we've had a previously validated token on this page
+		 * load
+		 *
+		 * Note: this flag will only be set if the previous call to
+		 * validateCsrfToken() authorized passthrough
+		 *
+		 * @return boolean Whether that's the case
+		 */
+		function hasValidPassthroughCsrfToken() {
+			$ok = $this->passthrough_csrf_token;
+			if ($ok) {
+				$this->passthrough_csrf_token--;
+			}
+			return $ok;
+		}
+
 	}
 ?>
