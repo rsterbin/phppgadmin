@@ -12,6 +12,7 @@ IN PROGRESS:
 ------------
 sql.php
 display.php
+tables.php
 
 TODO:
 -----
@@ -32,7 +33,6 @@ rules.php
 schemas.php
 sequences.php
 sqledit.php
-tables.php
 tablespaces.php
 tblproperties.php
 triggers.php
