@@ -122,7 +122,7 @@
 					echo "<input type=\"hidden\" name=\"target\" value=\"", htmlspecialchars(serialize($_REQUEST['target'])), "\" />\n";
 					echo "<input type=\"hidden\" name=\"SourceColumnList\" value=\"", htmlspecialchars($_REQUEST['SourceColumnList']), "\" />\n";
 					echo "<input type=\"hidden\" name=\"stage\" value=\"3\" />\n";
-					echo $misc->getCsrfTokenField('constraints');
+					echo $misc->getCsrfTokenField();
 					echo "<input type=\"submit\" value=\"{$lang['stradd']}\" />\n";
 					echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
 					echo "</form>\n";
@@ -136,7 +136,7 @@
 				if (isset($_POST['SourceColumnList'])) $temp = unserialize($_POST['SourceColumnList']);
 
 				// Check the csrf token before taking any action
-				if (!$misc->validateCsrfToken('constraints')) {
+				if (!$misc->validateCsrfToken()) {
 					addForeignKey(2, $lang['strbadcsrftoken']);
 				}
 				// Check that they've given at least one column
@@ -315,7 +315,7 @@
 			echo $misc->form;
 			echo "<input type=\"hidden\" name=\"table\" value=\"", htmlspecialchars($_REQUEST['table']), "\" />\n";
 			echo "<input type=\"hidden\" name=\"type\" value=\"", htmlspecialchars($type), "\" />\n";
-			echo $misc->getCsrfTokenField('constraints');
+			echo $misc->getCsrfTokenField();
 			echo "<input type=\"submit\" value=\"{$lang['stradd']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
 			echo "</form>\n";
@@ -326,7 +326,7 @@
 
 			if ($_POST['type'] == 'primary') {
 				// Check the csrf token before taking any action
-				if (!$misc->validateCsrfToken('constraints')) {
+				if (!$misc->validateCsrfToken()) {
 					addPrimaryOrUniqueKey($_POST['type'], true, $lang['strbadcsrftoken']);
 				}
 				// Check that they've given at least one column
@@ -344,7 +344,7 @@
 			}
 			elseif ($_POST['type'] == 'unique') {
 				// Check the csrf token before taking any action
-				if (!$misc->validateCsrfToken('constraints')) {
+				if (!$misc->validateCsrfToken()) {
 					addPrimaryOrUniqueKey($_POST['type'], true, $lang['strbadcsrftoken']);
 				}
 				// Check that they've given at least one column
@@ -394,7 +394,7 @@
 			echo "<input type=\"hidden\" name=\"action\" value=\"save_add_check\" />\n";
 			echo "<input type=\"hidden\" name=\"table\" value=\"", htmlspecialchars($_REQUEST['table']), "\" />\n";
 			echo $misc->form;
-			echo $misc->getCsrfTokenField('constraints');
+			echo $misc->getCsrfTokenField();
 			echo "<p><input type=\"submit\" name=\"ok\" value=\"{$lang['stradd']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
 			echo "</form>\n";
@@ -402,7 +402,7 @@
 		}
 		else {
 			// Check the csrf token before taking any action
-			if (!$misc->validateCsrfToken('constraints')) {
+			if (!$misc->validateCsrfToken()) {
 				addCheck(true, $lang['strbadcsrftoken']);
 			}
 			elseif (trim($_POST['definition']) == '') {
@@ -441,14 +441,15 @@
 			echo "<input type=\"hidden\" name=\"type\" value=\"", htmlspecialchars($_REQUEST['type']), "\" />\n";
 			echo $misc->form;
 			echo "<p><input type=\"checkbox\" id=\"cascade\" name=\"cascade\" /> <label for=\"cascade\">{$lang['strcascade']}</label></p>\n";
-			echo $misc->getCsrfTokenField('constraints');
+			// This action destroys something, so set a five-minute single-use token specifically for this form
+			echo $misc->getCsrfTokenField('drop_constraint', 60*5, true);
 			echo "<input type=\"submit\" name=\"drop\" value=\"{$lang['strdrop']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
 			echo "</form>\n";
 		}
 		else {
 			// Check the csrf token before taking any action
-			if (!$misc->validateCsrfToken('constraints')) {
+			if (!$misc->validateCsrfToken('drop_constraint')) {
 				doDrop(true, $lang['strbadcsrftoken']);
 			}
 			else {

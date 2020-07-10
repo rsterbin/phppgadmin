@@ -37,7 +37,7 @@
 		}
 
         // Check the csrf token before taking any action
-        if (!$misc->validateCsrfToken('aggregate')) {
+        if (!$misc->validateCsrfToken()) {
             doCreate($lang['strbadcsrftoken']);
             return;
         }
@@ -106,7 +106,7 @@
 		echo $misc->form;
 		echo "<input type=\"submit\" value=\"{$lang['strcreate']}\" />\n";
 		echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
-        echo $misc->getCsrfTokenField('aggregate');
+        echo $misc->getCsrfTokenField();
 		echo "</form>\n";
 	}
 
@@ -123,7 +123,7 @@
  		}
 
         // Check the csrf token before taking any action
-        if (!$misc->validateCsrfToken('aggregate')) {
+        if (!$misc->validateCsrfToken()) {
             doCreate($lang['strbadcsrftoken']);
             return;
         }
@@ -181,7 +181,7 @@
 			echo "<p>{$lang['strnodata']}</p>\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strback']}\" /></p>\n";
 		}	
-        echo $misc->getCsrfTokenField('aggregate');
+        echo $misc->getCsrfTokenField();
 		echo "</form>\n";						
 	}
 
@@ -207,12 +207,13 @@
 			echo $misc->form;
 			echo "<input type=\"submit\" name=\"drop\" value=\"{$lang['strdrop']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
-            echo $misc->getCsrfTokenField('aggregate');
+            // This action destroys something, so set a five-minute single-use token specifically for this form
+            echo $misc->getCsrfTokenField('drop_aggregate', 60*5, true);
 			echo "</form>\n";
 		}
 		else {
             // Check the csrf token before taking any action
-            if (!$misc->validateCsrfToken('aggregate')) {
+            if (!$misc->validateCsrfToken('drop_aggregate')) {
                 doDrop(true, $lang['strbadcsrftoken']);
                 return;
             }

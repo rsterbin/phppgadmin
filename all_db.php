@@ -22,7 +22,7 @@
 		if ($confirm) {
 			$misc->printTrail('database');
 			$misc->printTitle($lang['stralter'], 'pg.database.alter');
-            $misc->printMsg($msg);
+			$misc->printMsg($msg);
 
 			echo "<form action=\"all_db.php\" method=\"post\">\n";
 			echo "<table>\n";
@@ -65,16 +65,16 @@
 				htmlspecialchars($_REQUEST['alterdatabase']), "\" />\n";
 			echo "<input type=\"submit\" name=\"alter\" value=\"{$lang['stralter']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
-			echo $misc->getCsrfTokenField('databases');
+			echo $misc->getCsrfTokenField();
 			echo "</form>\n";
 		}
 		else {
 			// Check the csrf token before taking any action
-			if (!$misc->validateCsrfToken('databases')) {
+			if (!$misc->validateCsrfToken()) {
 				doAlter(true, $lang['strbadcsrftoken']);
 				return;
 			}
-            // Alter the database
+			// Alter the database
 			if (!isset($_POST['owner'])) $_POST['owner'] = '';
 			if (!isset($_POST['dbcomment'])) $_POST['dbcomment'] = '';
 			if ($data->alterDatabase($_POST['oldname'], $_POST['newname'], $_POST['owner'], $_POST['dbcomment']) == 0) {
@@ -100,43 +100,44 @@
 
 		if ($confirm) {
 
-            $misc->printTrail('database');
-            $misc->printTitle($lang['strdrop'], 'pg.database.drop');
-            $misc->printMsg($msg);
+			$misc->printTrail('database');
+			$misc->printTitle($lang['strdrop'], 'pg.database.drop');
+			$misc->printMsg($msg);
 
-	        echo "<form action=\"all_db.php\" method=\"post\">\n";
-            //If multi drop
-            if (isset($_REQUEST['ma'])) {
+			echo "<form action=\"all_db.php\" method=\"post\">\n";
+			//If multi drop
+			if (isset($_REQUEST['ma'])) {
 
-			    foreach($_REQUEST['ma'] as $v) {
-			        $a = unserialize(htmlspecialchars_decode($v, ENT_QUOTES));
-				    echo "<p>", sprintf($lang['strconfdropdatabase'], $misc->printVal($a['database'])), "</p>\n";
-				    printf('<input type="hidden" name="dropdatabase[]" value="%s" />', htmlspecialchars($a['database']));
-				    printf('<input type="hidden" name="ma[]" value="%s" />', htmlentities(serialize($a), ENT_COMPAT, 'UTF-8'));
-			    }
+				foreach($_REQUEST['ma'] as $v) {
+					$a = unserialize(htmlspecialchars_decode($v, ENT_QUOTES));
+					echo "<p>", sprintf($lang['strconfdropdatabase'], $misc->printVal($a['database'])), "</p>\n";
+					printf('<input type="hidden" name="dropdatabase[]" value="%s" />', htmlspecialchars($a['database']));
+					printf('<input type="hidden" name="ma[]" value="%s" />', htmlentities(serialize($a), ENT_COMPAT, 'UTF-8'));
+				}
 
 			} else {
-		            echo "<p>", sprintf($lang['strconfdropdatabase'], $misc->printVal($_REQUEST['dropdatabase'])), "</p>\n";
-			        echo "<input type=\"hidden\" name=\"dropdatabase\" value=\"", htmlspecialchars($_REQUEST['dropdatabase']), "\" />\n";
-            }// END if multi drop
+					echo "<p>", sprintf($lang['strconfdropdatabase'], $misc->printVal($_REQUEST['dropdatabase'])), "</p>\n";
+					echo "<input type=\"hidden\" name=\"dropdatabase\" value=\"", htmlspecialchars($_REQUEST['dropdatabase']), "\" />\n";
+			}// END if multi drop
 
 			echo "<input type=\"hidden\" name=\"action\" value=\"drop\" />\n";
-        	echo $misc->form;
+			echo $misc->form;
 			echo "<input type=\"submit\" name=\"drop\" value=\"{$lang['strdrop']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
-			echo $misc->getCsrfTokenField('databases');
+			// This action destroys something, so set a five-minute single-use token specifically for this form
+			echo $misc->getCsrfTokenField('drop_database', 60*5, true);
 			echo "</form>\n";
 		} // END confirm
 		else {
-            // Check the csrf token before taking any action
-            if (!$misc->validateCsrfToken('databases')) {
-                doDrop(true, $lang['strbadcsrftoken']);
-                return;
-            }
-            //If multi drop
-            if (is_array($_REQUEST['dropdatabase'])) {
-                $msg = '';
-                foreach($_REQUEST['dropdatabase'] as $d) {
+			// Check the csrf token before taking any action
+			if (!$misc->validateCsrfToken('drop_database')) {
+				doDrop(true, $lang['strbadcsrftoken']);
+				return;
+			}
+			//If multi drop
+			if (is_array($_REQUEST['dropdatabase'])) {
+				$msg = '';
+				foreach($_REQUEST['dropdatabase'] as $d) {
 					$status = $data->dropDatabase($d);
 					if ($status == 0)
 						$msg.= sprintf('%s: %s<br />', htmlentities($d, ENT_QUOTES, 'UTF-8'), $lang['strdatabasedropped']);
@@ -145,19 +146,19 @@
 						return;
 					}
 				}// Everything went fine, back to Default page...
-                $_reload_drop_database = true;
-                doDefault($msg);
-            } else {
-			    $status = $data->dropDatabase($_POST['dropdatabase']);
-			    if ($status == 0) {
-				    $_reload_drop_database = true;
-				    doDefault($lang['strdatabasedropped']);
-			    }
-			    else
-				    doDefault($lang['strdatabasedroppedbad']);
-            }
+				$_reload_drop_database = true;
+				doDefault($msg);
+			} else {
+				$status = $data->dropDatabase($_POST['dropdatabase']);
+				if ($status == 0) {
+					$_reload_drop_database = true;
+					doDefault($lang['strdatabasedropped']);
+				}
+				else
+					doDefault($lang['strdatabasedroppedbad']);
+			}
 		}//END DROP
-    }// END FUNCTION
+	}// END FUNCTION
 
 
 	/**
@@ -174,7 +175,7 @@
 		if (!isset($_POST['formName'])) $_POST['formName'] = '';
 		// Default encoding is that in language file
 		if (!isset($_POST['formEncoding'])) {
-		    $_POST['formEncoding'] = '';
+			$_POST['formEncoding'] = '';
 		}
 		if (!isset($_POST['formTemplate'])) $_POST['formTemplate'] = 'template1';
 		if (!isset($_POST['formSpc'])) $_POST['formSpc'] = '';
@@ -217,8 +218,8 @@
 		echo "\t\t<td class=\"data1\">\n";
 		echo "\t\t\t<select name=\"formEncoding\">\n";
 		echo "\t\t\t\t<option value=\"\"></option>\n";
-        foreach ($data->codemap as $key) {
-		    echo "\t\t\t\t<option value=\"", htmlspecialchars($key), "\"",
+		foreach ($data->codemap as $key) {
+			echo "\t\t\t\t<option value=\"", htmlspecialchars($key), "\"",
 				($key == $_POST['formEncoding']) ? ' selected="selected"' : '', ">",
 				$misc->printVal($key), "</option>\n";
 		}
@@ -271,7 +272,7 @@
 		echo $misc->form;
 		echo "<input type=\"submit\" value=\"{$lang['strcreate']}\" />\n";
 		echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
-        echo $misc->getCsrfTokenField('databases');
+		echo $misc->getCsrfTokenField();
 		echo "</form>\n";
 	}
 
@@ -295,25 +296,25 @@
 
 		// Check that they've given a name and a definition
 		if ($_POST['formName'] == '') {
-            doCreate($lang['strdatabaseneedsname']);
-            return;
-        }
+			doCreate($lang['strdatabaseneedsname']);
+			return;
+		}
 
-        // Check the csrf token before taking any action
-        if (!$misc->validateCsrfToken('databases')) {
-            doCreate($lang['strbadcsrftoken']);
-            return;
-        }
+		// Check the csrf token before taking any action
+		if (!$misc->validateCsrfToken()) {
+			doCreate($lang['strbadcsrftoken']);
+			return;
+		}
 
-        // Create the database
-        $status = $data->createDatabase($_POST['formName'], $_POST['formEncoding'], $_POST['formSpc'],
-            $_POST['formComment'], $_POST['formTemplate'], $_POST['formCollate'], $_POST['formCType']);
-        if ($status == 0) {
-            $_reload_browser = true;
-            doDefault($lang['strdatabasecreated']);
-        }
-        else
-            doCreate($lang['strdatabasecreatedbad']);
+		// Create the database
+		$status = $data->createDatabase($_POST['formName'], $_POST['formEncoding'], $_POST['formSpc'],
+			$_POST['formComment'], $_POST['formTemplate'], $_POST['formCollate'], $_POST['formCType']);
+		if ($status == 0) {
+			$_reload_browser = true;
+			doDefault($lang['strdatabasecreated']);
+		}
+		else
+			doCreate($lang['strdatabasecreatedbad']);
 	}
 
 	/**
@@ -323,43 +324,43 @@
 		global $data, $misc;
 		global $lang;
 
-        // Check the csrf token before taking any action
-        if (!$misc->validateCsrfToken('databases')) {
-            return $lang['strbadcsrftoken'];
-        }
+		// Check the csrf token before taking any action
+		if (!$misc->validateCsrfToken()) {
+			return $lang['strbadcsrftoken'];
+		}
 
-        // Include the passthrough exporter
-        include_once('./classes/Export/Passthrough.php');
+		// Include the passthrough exporter
+		include_once('./classes/Export/Passthrough.php');
 
-        // Find all the options we'll be passing in
-        $options = array(
-            'server_id' => isset($_REQUEST['server']) ? $_REQUEST['server'] : null,
-            'cluster_wide' => (isset($_REQUEST['subject']) && $_REQUEST['subject'] == 'server'),
-            'database' => isset($_REQUEST['database']) ? $_REQUEST['database'] : null,
-            'schema' => isset($_REQUEST['schema']) ? $_REQUEST['schema'] : null,
-            'subject' => isset($_REQUEST['subject']) ? $_REQUEST['subject'] : null,
-            'object' => isset($_REQUEST['subject']) ? $_REQUEST[$_REQUEST['subject']] : null,
-            'format' => isset($_REQUEST['d_format']) ? $_REQUEST['d_format'] :
-                isset($_REQUEST['sd_format']) ? $_REQUEST['sd_format'] : null,
-            'identifiers' => isset($_REQUEST['d_oids']) || isset($_REQUEST['sd_oids']),
-            'drop' => isset($_REQUEST['s_clean']) || isset($_REQUEST['sd_clean']),
-            'output' => isset($_REQUEST['output']) ? $_REQUEST['output'] : null,
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'],
-            'ssl' => isset($_SERVER['HTTPS']),
-            'containing' => isset($_REQUEST['what']) ? $_REQUEST['what'] : null,
-        );
+		// Find all the options we'll be passing in
+		$options = array(
+			'server_id' => isset($_REQUEST['server']) ? $_REQUEST['server'] : null,
+			'cluster_wide' => (isset($_REQUEST['subject']) && $_REQUEST['subject'] == 'server'),
+			'database' => isset($_REQUEST['database']) ? $_REQUEST['database'] : null,
+			'schema' => isset($_REQUEST['schema']) ? $_REQUEST['schema'] : null,
+			'subject' => isset($_REQUEST['subject']) ? $_REQUEST['subject'] : null,
+			'object' => isset($_REQUEST['subject']) ? $_REQUEST[$_REQUEST['subject']] : null,
+			'format' => isset($_REQUEST['d_format']) ? $_REQUEST['d_format'] :
+				isset($_REQUEST['sd_format']) ? $_REQUEST['sd_format'] : null,
+			'identifiers' => isset($_REQUEST['d_oids']) || isset($_REQUEST['sd_oids']),
+			'drop' => isset($_REQUEST['s_clean']) || isset($_REQUEST['sd_clean']),
+			'output' => isset($_REQUEST['output']) ? $_REQUEST['output'] : null,
+			'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+			'ssl' => isset($_SERVER['HTTPS']),
+			'containing' => isset($_REQUEST['what']) ? $_REQUEST['what'] : null,
+		);
 
-        // Create the exporter
-        $exporter = new Export_Passthrough($options);
+		// Create the exporter
+		$exporter = new Export_Passthrough($options);
 
-        // If we can't proceed, return the error message
-        if (!$exporter->canProceed()) {
-            return $exporter->getErrorMessage();
-        }
+		// If we can't proceed, return the error message
+		if (!$exporter->canProceed()) {
+			return $exporter->getErrorMessage();
+		}
 
-        // Run the passthrough export and exit
-        $exporter->run();
-        return false;
+		// Run the passthrough export and exit
+		$exporter->run();
+		return false;
 	}
 
 	/**
@@ -369,52 +370,52 @@
 		global $data, $misc;
 		global $lang;
 
-        $misc->printTrail('server');
-        $misc->printTabs('server','export');
-        $misc->printMsg($msg);
+		$misc->printTrail('server');
+		$misc->printTabs('server','export');
+		$misc->printMsg($msg);
 
-        echo "<form action=\"all_db.php\" method=\"post\">\n";
-        echo "<input type=\"hidden\" name=\"action\" value=\"export\" />\n";
-        echo "<table>\n";
-        echo "<tr><th class=\"data\">{$lang['strformat']}</th><th class=\"data\">{$lang['stroptions']}</th></tr>\n";
-        // Data only
-        echo "<tr><th class=\"data left\" rowspan=\"". ($data->hasServerOids() ? 2 : 1) ."\">";
-        echo "<input type=\"radio\" id=\"what1\" name=\"what\" value=\"dataonly\" checked=\"checked\" /><label for=\"what1\">{$lang['strdataonly']}</label></th>\n";
-        echo "<td>{$lang['strformat']}\n";
-        echo "<select name=\"d_format\">\n";
-        echo "<option value=\"copy\">COPY</option>\n";
-        echo "<option value=\"sql\">SQL</option>\n";
-        echo "</select>\n</td>\n</tr>\n";
-        if ($data->hasServerOids()) {
-            echo "<tr><td><input type=\"checkbox\" id=\"d_oids\" name=\"d_oids\" /><label for=\"d_oids\">{$lang['stroids']}</label></td>\n</tr>\n";
-        }
-        // Structure only
-        echo "<tr><th class=\"data left\"><input type=\"radio\" id=\"what2\" name=\"what\" value=\"structureonly\" /><label for=\"what2\">{$lang['strstructureonly']}</label></th>\n";
-        echo "<td><input type=\"checkbox\" id=\"s_clean\" name=\"s_clean\" /><label for=\"s_clean\">{$lang['strdrop']}</label></td>\n</tr>\n";
-        // Structure and data
-        echo "<tr><th class=\"data left\" rowspan=\"". ($data->hasServerOids() ? 3 : 2) ."\">";
-        echo "<input type=\"radio\" id=\"what3\" name=\"what\" value=\"structureanddata\" /><label for=\"what3\">{$lang['strstructureanddata']}</label></th>\n";
-        echo "<td>{$lang['strformat']}\n";
-        echo "<select name=\"sd_format\">\n";
-        echo "<option value=\"copy\">COPY</option>\n";
-        echo "<option value=\"sql\">SQL</option>\n";
-        echo "</select>\n</td>\n</tr>\n";
-        echo "<tr><td><input type=\"checkbox\" id=\"sd_clean\" name=\"sd_clean\" /><label for=\"sd_clean\">{$lang['strdrop']}</label></td>\n</tr>\n";
-        if ($data->hasServerOids()) {
-            echo "<tr><td><input type=\"checkbox\" id=\"sd_oids\" name=\"sd_oids\" /><label for=\"sd_oids\">{$lang['stroids']}</label></td>\n</tr>\n";
-        }
-        echo "</table>\n";
+		echo "<form action=\"all_db.php\" method=\"post\">\n";
+		echo "<input type=\"hidden\" name=\"action\" value=\"export\" />\n";
+		echo "<table>\n";
+		echo "<tr><th class=\"data\">{$lang['strformat']}</th><th class=\"data\">{$lang['stroptions']}</th></tr>\n";
+		// Data only
+		echo "<tr><th class=\"data left\" rowspan=\"". ($data->hasServerOids() ? 2 : 1) ."\">";
+		echo "<input type=\"radio\" id=\"what1\" name=\"what\" value=\"dataonly\" checked=\"checked\" /><label for=\"what1\">{$lang['strdataonly']}</label></th>\n";
+		echo "<td>{$lang['strformat']}\n";
+		echo "<select name=\"d_format\">\n";
+		echo "<option value=\"copy\">COPY</option>\n";
+		echo "<option value=\"sql\">SQL</option>\n";
+		echo "</select>\n</td>\n</tr>\n";
+		if ($data->hasServerOids()) {
+			echo "<tr><td><input type=\"checkbox\" id=\"d_oids\" name=\"d_oids\" /><label for=\"d_oids\">{$lang['stroids']}</label></td>\n</tr>\n";
+		}
+		// Structure only
+		echo "<tr><th class=\"data left\"><input type=\"radio\" id=\"what2\" name=\"what\" value=\"structureonly\" /><label for=\"what2\">{$lang['strstructureonly']}</label></th>\n";
+		echo "<td><input type=\"checkbox\" id=\"s_clean\" name=\"s_clean\" /><label for=\"s_clean\">{$lang['strdrop']}</label></td>\n</tr>\n";
+		// Structure and data
+		echo "<tr><th class=\"data left\" rowspan=\"". ($data->hasServerOids() ? 3 : 2) ."\">";
+		echo "<input type=\"radio\" id=\"what3\" name=\"what\" value=\"structureanddata\" /><label for=\"what3\">{$lang['strstructureanddata']}</label></th>\n";
+		echo "<td>{$lang['strformat']}\n";
+		echo "<select name=\"sd_format\">\n";
+		echo "<option value=\"copy\">COPY</option>\n";
+		echo "<option value=\"sql\">SQL</option>\n";
+		echo "</select>\n</td>\n</tr>\n";
+		echo "<tr><td><input type=\"checkbox\" id=\"sd_clean\" name=\"sd_clean\" /><label for=\"sd_clean\">{$lang['strdrop']}</label></td>\n</tr>\n";
+		if ($data->hasServerOids()) {
+			echo "<tr><td><input type=\"checkbox\" id=\"sd_oids\" name=\"sd_oids\" /><label for=\"sd_oids\">{$lang['stroids']}</label></td>\n</tr>\n";
+		}
+		echo "</table>\n";
 
-        echo "<h3>{$lang['stroptions']}</h3>\n";
-        echo "<p><input type=\"radio\" id=\"output1\" name=\"output\" value=\"show\" checked=\"checked\" /><label for=\"output1\">{$lang['strshow']}</label>\n";
-        echo "<br/><input type=\"radio\" id=\"output2\" name=\"output\" value=\"download\" /><label for=\"output2\">{$lang['strdownload']}</label></p>\n";
+		echo "<h3>{$lang['stroptions']}</h3>\n";
+		echo "<p><input type=\"radio\" id=\"output1\" name=\"output\" value=\"show\" checked=\"checked\" /><label for=\"output1\">{$lang['strshow']}</label>\n";
+		echo "<br/><input type=\"radio\" id=\"output2\" name=\"output\" value=\"download\" /><label for=\"output2\">{$lang['strdownload']}</label></p>\n";
 
-        echo "<p><input type=\"hidden\" name=\"action\" value=\"export\" />\n";
-        echo "<input type=\"hidden\" name=\"subject\" value=\"server\" />\n";
-        echo $misc->form;
-        echo "<input type=\"submit\" name=\"export\" value=\"{$lang['strexport']}\" /></p>\n";
-        echo $misc->getCsrfTokenField('databases');
-        echo "</form>\n";
+		echo "<p><input type=\"hidden\" name=\"action\" value=\"export\" />\n";
+		echo "<input type=\"hidden\" name=\"subject\" value=\"server\" />\n";
+		echo $misc->form;
+		echo "<input type=\"submit\" name=\"export\" value=\"{$lang['strexport']}\" /></p>\n";
+		echo $misc->getCsrfTokenField();
+		echo "</form>\n";
 	}
 
 	/**
@@ -473,51 +474,51 @@
 
 		$actions = array(
 			'multiactions' => array(
-			    'keycols' => array('database' => 'datname'),
-			    'url' => 'all_db.php',
-			    'default' => null,
+				'keycols' => array('database' => 'datname'),
+				'url' => 'all_db.php',
+				'default' => null,
 			),
 			'drop' => array(
-			    'content' => $lang['strdrop'],
-			    'attr'=> array (
+				'content' => $lang['strdrop'],
+				'attr'=> array (
 				'href' => array (
-				    'url' => 'all_db.php',
-				    'urlvars' => array (
+					'url' => 'all_db.php',
+					'urlvars' => array (
 					'subject' => 'database',
 					'action' => 'confirm_drop',
 					'dropdatabase' => field('datname')
-				    )
+					)
 				)
-			    ),
-			    'multiaction' => 'confirm_drop',
+				),
+				'multiaction' => 'confirm_drop',
 			),
 			'privileges' => array(
-			    'content' => $lang['strprivileges'],
-			    'attr'=> array (
+				'content' => $lang['strprivileges'],
+				'attr'=> array (
 				'href' => array (
-				    'url' => 'privileges.php',
-				    'urlvars' => array (
+					'url' => 'privileges.php',
+					'urlvars' => array (
 					'subject' => 'database',
 					'database' => field('datname')
-				    )
+					)
 				)
-			    )
+				)
 			)
 		);
 		if ($data->hasAlterDatabase() ) {
-		    $actions['alter'] = array(
+			$actions['alter'] = array(
 			'content' => $lang['stralter'],
 			'attr'=> array (
-			    'href' => array (
+				'href' => array (
 				'url' => 'all_db.php',
 				'urlvars' => array (
-				    'subject' => 'database',
-				    'action' => 'confirm_alter',
-				    'alterdatabase' => field('datname')
+					'subject' => 'database',
+					'action' => 'confirm_alter',
+					'alterdatabase' => field('datname')
 				)
-			    )
+				)
 			)
-		    );
+			);
 		}
 
 		if (!$data->hasTablespaces()) unset($columns['tablespace']);
@@ -528,18 +529,18 @@
 		$misc->printTable($databases, $columns, $actions, 'all_db-databases', $lang['strnodatabases']);
 
 		$navlinks = array (
-		    'create' => array (
+			'create' => array (
 			'attr'=> array (
-			    'href' => array (
+				'href' => array (
 				'url' => 'all_db.php',
 				'urlvars' => array (
-				    'action' => 'create',
-				    'server' => $_REQUEST['server']
+					'action' => 'create',
+					'server' => $_REQUEST['server']
 				)
-			    )
+				)
 			),
 			'content' => $lang['strcreatedatabase']
-		    )
+			)
 		);
 		$misc->printNavLinks($navlinks, 'all_db-databases', get_defined_vars());
 	}
@@ -574,13 +575,13 @@
 
 	if ($action == 'tree') doTree();
 
-    $export_error = '';
-    if ($action == 'export' && isset($_REQUEST['export'])) {
-        $export_error = doExport();
-        if (!$export_error) {
-            exit;
-        }
-    }
+	$export_error = '';
+	if ($action == 'export' && isset($_REQUEST['export'])) {
+		$export_error = doExport();
+		if (!$export_error) {
+			exit;
+		}
+	}
 
 	$misc->printHeader($lang['strdatabases']);
 	$misc->printBody();

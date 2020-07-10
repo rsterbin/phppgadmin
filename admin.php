@@ -46,13 +46,14 @@
 
 			echo "<input type=\"submit\" name=\"cluster\" value=\"{$lang['strcluster']}\" />\n"; //TODO
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
-			echo $misc->getCsrfTokenField('cluster');
+            // This action destroys something, so set a five-minute single-use token specifically for this form
+			echo $misc->getCsrfTokenField('drop_autovacuum', 60*5, true);
 			echo "</form>\n";
 		} // END single cluster
 
 		else {
 			// Check the csrf token before taking any action
-			if (!$misc->validateCsrfToken('cluster')) {
+			if (!$misc->validateCsrfToken('drop_autovacuum')) {
 				doAdmin($type, $lang['strbadcsrftoken']);
 				return;
 			}
@@ -139,12 +140,12 @@
 
 			echo "<input type=\"submit\" name=\"reindex\" value=\"{$lang['strreindex']}\" />\n"; //TODO
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
-			echo $misc->getCsrfTokenField('reindex');
+			echo $misc->getCsrfTokenField();
 			echo "</form>\n";
 		} // END single reindex
 		else {
 			// Check the csrf token before taking any action
-			if (!$misc->validateCsrfToken('reindex')) {
+			if (!$misc->validateCsrfToken()) {
 				doAdmin($type, $lang['strbadcsrftoken']);
 				return;
 			}
@@ -219,12 +220,12 @@
 
 			echo "<input type=\"submit\" name=\"analyze\" value=\"{$lang['stranalyze']}\" />\n"; //TODO
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
-			echo $misc->getCsrfTokenField('analyze');
+			echo $misc->getCsrfTokenField();
 			echo "</form>\n";
 		} // END single analyze
 		else {
 			// Check the csrf token before taking any action
-			if (!$misc->validateCsrfToken('analyze')) {
+			if (!$misc->validateCsrfToken()) {
 				doAdmin($type, $lang['strbadcsrftoken']);
 				return;
 			}
@@ -302,12 +303,12 @@
 			echo "<p><input type=\"checkbox\" id=\"vacuum_freeze\" name=\"vacuum_freeze\" /> <label for=\"vacuum_freeze\">{$lang['strfreeze']}</label></p>\n";
 			echo "<input type=\"submit\" name=\"vacuum\" value=\"{$lang['strvacuum']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
-			echo $misc->getCsrfTokenField('vacuum');
+			echo $misc->getCsrfTokenField();
 			echo "</form>\n";
 		} // END single vacuum
 		else {
 			// Check the csrf token before taking any action
-			if (!$misc->validateCsrfToken('vacuum')) {
+			if (!$misc->validateCsrfToken()) {
 				doAdmin($type, $lang['strbadcsrftoken']);
 				return;
 			}

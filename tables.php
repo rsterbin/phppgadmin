@@ -420,12 +420,18 @@
 			echo $misc->form;
 			echo "<input type=\"submit\" name=\"select\" accesskey=\"r\" value=\"{$lang['strselect']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" /></p>\n";
+			echo $misc->getCsrfTokenField();
 			echo "</form>\n";
 		}
 		else {
 			if (!isset($_POST['show'])) $_POST['show'] = array();
 			if (!isset($_POST['values'])) $_POST['values'] = array();
 			if (!isset($_POST['nulls'])) $_POST['nulls'] = array();
+
+			if (!$misc->validateCsrfToken()) {
+				doSelectRows(true, $lang['strbadcsrftoken']);
+				return;
+			}
 
 			// Verify that they haven't supplied a value for unary operators
 			foreach ($_POST['ops'] as $k => $v) {
@@ -557,6 +563,7 @@
 				echo "<p>{$lang['strnofieldsforinsert']}</p>\n";
 				echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
 			}
+			echo $misc->getCsrfTokenField();
 			echo $misc->form;
 			echo "</form>\n";
 		}
@@ -564,6 +571,11 @@
 			if (!isset($_POST['values'])) $_POST['values'] = array();
 			if (!isset($_POST['nulls'])) $_POST['nulls'] = array();
 			$_POST['fields'] = unserialize(htmlspecialchars_decode($_POST['fields'], ENT_QUOTES));
+
+			if (!$misc->validateCsrfToken()) {
+				doInsertRow(true, $lang['strbadcsrftoken']);
+				return;
+			}
 
 			if ($_SESSION['counter']++ == $_POST['protection_counter']) {
 				$status = $data->insertRow($_POST['table'], $_POST['fields'], $_POST['values'],
@@ -588,7 +600,7 @@
 	/**
 	 * Show confirmation of empty and perform actual empty
 	 */
-	function doEmpty($confirm) {
+	function doEmpty($confirm, $msg = '') {
 		global $data, $misc;
 		global $lang;
 
@@ -601,6 +613,7 @@
 			if (isset($_REQUEST['ma'])) {
 				$misc->printTrail('schema');
 				$misc->printTitle($lang['strempty'],'pg.table.empty');
+				$misc->printMsg($msg);
 
 				echo "<form action=\"tables.php\" method=\"post\">\n";
 				foreach ($_REQUEST['ma'] as $v) {
@@ -612,6 +625,7 @@
 			else {
 				$misc->printTrail('table');
 				$misc->printTitle($lang['strempty'],'pg.table.empty');
+				$misc->printMsg($msg);
 
 				echo "<p>", sprintf($lang['strconfemptytable'], $misc->printVal($_REQUEST['table'])), "</p>\n";
 
@@ -622,9 +636,14 @@
 			echo "<input type=\"hidden\" name=\"action\" value=\"empty\" />\n";
 			echo $misc->form;
 			echo "<input type=\"submit\" name=\"empty\" value=\"{$lang['strempty']}\" /> <input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
+			echo $misc->getCsrfTokenField();
 			echo "</form>\n";
 		} // END if confirm
 		else { // Do Empty
+			if (!$misc->validateCsrfToken()) {
+				doEmpty(true, $lang['strbadcsrftoken']);
+				return;
+			}
 			if (is_array($_REQUEST['table'])) {
 				$msg='';
 				foreach($_REQUEST['table'] as $t) {
@@ -689,9 +708,14 @@
 			echo "<p><input type=\"checkbox\" id=\"cascade\" name=\"cascade\" /> <label for=\"cascade\">{$lang['strcascade']}</label></p>\n";
 			echo "<input type=\"submit\" name=\"drop\" value=\"{$lang['strdrop']}\" />\n";
 			echo "<input type=\"submit\" name=\"cancel\" value=\"{$lang['strcancel']}\" />\n";
+			echo $misc->getCsrfTokenField();
 			echo "</form>\n";
 		} // END confirm
 		else {
+			if (!$misc->validateCsrfToken()) {
+				doDrop(true, $lang['strbadcsrftoken']);
+				return;
+			}
 			//If multi drop
 			if (is_array($_REQUEST['table'])) {
 				$msg = '';

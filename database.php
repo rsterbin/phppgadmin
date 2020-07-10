@@ -43,7 +43,7 @@
 		// If this is a form post, check the csrf token before running a search
 		$token_ok = true;
 		if ($_REQUEST['term'] != '' && $_SERVER['REQUEST_METHOD'] == 'POST') {
-			if (!$misc->validateCsrfToken('database')) {
+			if (!$misc->validateCsrfToken()) {
 				if ($msg != '')  {
 					$msg .= "<br />\n" . $lang['strbadcsrftoken'];
 				} else {
@@ -85,7 +85,7 @@
 		echo "<input type=\"submit\" value=\"{$lang['strfind']}\" />\n";
 		echo $misc->form;
 		echo "<input type=\"hidden\" name=\"action\" value=\"find\" /></p>\n";
-		echo $misc->getCsrfTokenField('database');
+		echo $misc->getCsrfTokenField();
 		echo "</form>\n";
 		
 		// Default focus
@@ -319,7 +319,7 @@
 		global $lang;
 
 		// Check the csrf token before taking any action
-		if (!$misc->validateCsrfToken('database')) {
+		if (!$misc->validateCsrfToken()) {
 			return $lang['strbadcsrftoken'];
 		}
 
@@ -412,7 +412,7 @@
 		echo "<input type=\"hidden\" name=\"export\" value=\"database\" />\n";
 		echo $misc->form;
 		echo "<input type=\"submit\" value=\"{$lang['strexport']}\" /></p>\n";
-		echo $misc->getCsrfTokenField('database');
+		echo $misc->getCsrfTokenField();
 		echo "</form>\n";
 	}
 	
@@ -667,7 +667,7 @@
 		echo "<p><input type=\"submit\" name=\"execute\" accesskey=\"r\" value=\"{$lang['strexecute']}\" />\n";
 		echo $misc->form;
 		echo "<input type=\"reset\" accesskey=\"q\" value=\"{$lang['strreset']}\" /></p>\n";
-		echo $misc->getCsrfTokenField('sql');
+		echo $misc->getCsrfTokenField();
 		echo "</form>\n";
 
 		// Default focus
