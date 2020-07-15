@@ -58,11 +58,16 @@
             exit('PHPPgAdmin cannot be fully secured while running under PHP versions before 7.3.  Please upgrade PHP if possible.  If you cannot upgrade, and you\'re willing to assume the risk of CSRF attacks, you can change the value of "extra_session_security" to false in your config.inc.php file.');
         }
         if (ini_get('session.auto_start')) {
+            // If session.auto_start is on, and the session doesn't have
+            // session.cookie_samesite set, destroy and re-create the session
             if (session_name() !== $our_session_name) {
-                session_destroy();
-                session_name($our_session_name);
-                ini_set('session.cookie_samesite', 'Strict');
-                session_start();
+                $setting = strtolower(ini_get('session.cookie_samesite'));
+                if ($setting !== 'lax' && $setting !== 'strict') {
+                    session_destroy();
+                    session_name($our_session_name);
+                    ini_set('session.cookie_samesite', 'Strict');
+                    session_start();
+                }
             }
         } else {
             session_name($our_session_name);
