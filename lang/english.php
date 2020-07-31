@@ -184,7 +184,11 @@
 	$lang['strbadschema'] = 'Invalid schema specified.';
 	$lang['strbaddatabase'] = 'Invalid database specified.';
 	$lang['strbadencoding'] = 'Failed to set client encoding in database.';
+	$lang['strmissingscript'] = 'No uploaded script was found';
+	$lang['strinsufficientparams'] = 'There is not enough information to run a query';
+	$lang['strbadsearchpath'] = 'The search path provided is invalid';
 	$lang['strsqlerror'] = 'SQL error:';
+	$lang['strqueryerror'] = 'There was a query error.';
 	$lang['strinstatement'] = 'In statement:';
 	$lang['strinvalidparam'] = 'Invalid script parameters.';
 	$lang['strnodata'] = 'No rows found.';

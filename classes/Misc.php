@@ -1696,6 +1696,7 @@
 
 
 		/**
+		 * TODO: Remove this
 		 * Do multi-page navigation.  Displays the prev, next and page options.
 		 * @param $page - the page currently viewed
 		 * @param $pages - the maximum number of pages
@@ -2099,8 +2100,8 @@
 					echo "</td>\n";
 					echo "</tr>\n";
 					echo "</table>\n";
-					if ($has_ma && isset($ma['csrf_id'])) {
-						echo $this->getCsrfTokenField($ma['csrf_id']);
+					if ($has_ma) {
+						echo $this->getCsrfTokenField();
 					}
 					echo '</form>';
 				};
@@ -2691,15 +2692,26 @@
 				return false;
 			}
 			$f = $conf['csrf_token_name'];
-			$this->tokens->cleanup();
 			if (!isset($_REQUEST[$f])) {
 				return false;
 			}
-			$ok = $this->tokens->validate($identifier, $_REQUEST[$f]);
+			$ok = $this->manuallyValidateCsrfToken($_REQUEST[$f], $identifier);
 			if ($ok && intval($set_passthrough) > 0) {
 				$this->passthrough_csrf_token = intval($set_passthrough);
 			}
 			return $ok;
+		}
+
+		/**
+		 * Verify a CSRF token by hand
+		 *
+		 * @param string The actual token to check
+		 * @param string An identifier for the form (optional, "general")
+		 * @return boolean Whether the token was valid
+		 */
+		function manuallyValidateCsrfToken($token, $identifier = 'general') {
+			$this->tokens->cleanup();
+			return $this->tokens->validate($identifier, $token);
 		}
 
 		/**
